@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Botones</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000; /* Fondo negro */
+            color: white; /* Texto blanco */
+        }
+        .container {
+            text-align: center;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            width: 200px; /* Ancho fijo para botones */
+        }
+        button:hover {
+            background-color: #0056b3; /* Color al pasar el mouse */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="cuavana3">Cuavana3</button>
+        <button id="detodopeliculas">De Todo Películas</button>
+    </div>
+
+    <script>
+        document.getElementById('cuavana3').onclick = function() {
+            window.location.href = 'https://cuevanahd.me/';
+        };
+
+        document.getElementById('detodopeliculas').onclick = function() {
+            window.location.href = 'https://detodopeliculas.nu/';
+        };
+    </script>
+</body>
+</html>
