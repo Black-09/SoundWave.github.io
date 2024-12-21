@@ -3,20 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Página</title>
+    <title>Protección contra herramientas de depuración</title>
+    <script>
+        // Intentar prevenir acceso a las herramientas de desarrollo
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && (e.key === 'i' || e.key === 'j' || e.key === 'u')) {
+                e.preventDefault();
+                alert('La vista de herramientas de desarrollo ha sido deshabilitada.');
+            }
+        });
+
+        window.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            alert('El menú contextual ha sido deshabilitado.');
+        });
+    </script>
 </head>
 <body>
 
-    <label for="apiKeyLabel">API Key: </label>
-    <span id="apiKeyLabel">tu_api_key_oculto</span>
-
-    <script>
-        // Mostrar la API Key en un campo de texto o en un label para fines de debug
-        const API_KEY = 'tu_apilto'; // Reemplaza esto con tu API Key
-
-        // Para mostrarlo en el label o cualquier lugar de la página
-        document.getElementById('apiKeyLabel').textContent = API_KEY;
-    </script>
+    <h1>Bienvenido a mi página con protección contra herramientas de depuración</h1>
+    <p>Las herramientas de desarrollo han sido deshabilitadas para proteger el contenido de esta página.</p>
 
 </body>
 </html>
