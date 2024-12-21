@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocultar Variables del Código</title>
+    <title>Página Móvil</title>
+    <script>
+        // Redirigir a otra URL si el ancho de la pantalla es mayor a 768px (pantallas grandes)
+        if (window.innerWidth > 768) {
+            window.location.href = 'https://tuversiónparapc.com'; // Redirige a una URL específica
+        }
+    </script>
 </head>
 <body>
 
-    <h1>Ejemplo de Ocultación de Variables</h1>
-    <p>Contenido aquí...</p>
-
-    <script src="script.js"></script> <!-- Incluye el archivo JavaScript aquí -->
+    <h1>Bienvenido a la Página Móvil</h1>
+    <p>Contenido adaptado para dispositivos móviles.</p>
 
 </body>
 </html>
