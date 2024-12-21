@@ -1,36 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Proyecto</title>
-    <script>
-        async function loadEnv() {
-            try {
-                const response = await fetch('/.env'); // Lee el archivo .env
-                if (!response.ok) {
-                    throw new Error('No se pudo cargar el archivo .env');
-                }
-                const data = await response.text();
-                const env = {};
-                data.split('\n').forEach(line => {
-                    const [key, value] = line.split('=');
-                    env[key.trim()] = value.trim();
-                });
-                return env;
-            } catch (error) {
-                console.error(error);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const env = await loadEnv();
-            document.getElementById('password').textContent = env.DB_PASSWORD;
-        });
-    </script>
+    <title>Mi Página</title>
 </head>
 <body>
-    <h1>Mi Proyecto</h1>
-    <p>Contraseña: <span id="password"></span></p>
+
+    <script>
+        // Definiendo variables de entorno en JavaScript
+        const API_KEY = 'tu_api_key';
+        const API_URL = 'https://api.example.com/data';
+        
+        console.log('API Key:', API_KEY); // Para verificar que la variable esté cargada
+    </script>
+
 </body>
 </html>
