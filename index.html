@@ -7,12 +7,15 @@
 </head>
 <body>
 
+    <label for="apiKeyLabel">API Key: </label>
+    <span id="apiKeyLabel">tu_api_key_oculto</span>
+
     <script>
-        // Definiendo variables de entorno en JavaScript
-        const API_KEY = 'tu_api_key';
-        const API_URL = 'https://api.example.com/data';
-        
-        console.log('API Key:', API_KEY); // Para verificar que la variable esté cargada
+        // Mostrar la API Key en un campo de texto o en un label para fines de debug
+        const API_KEY = 'tu_api_key_oculto'; // Reemplaza esto con tu API Key
+
+        // Para mostrarlo en el label o cualquier lugar de la página
+        document.getElementById('apiKeyLabel').textContent = API_KEY;
     </script>
 
 </body>
