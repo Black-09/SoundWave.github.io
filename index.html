@@ -3,28 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evitar Modo Desarrollador</title>
+    <title>Ocultar Variables del Código</title>
 </head>
 <body>
 
-    <h1>Bienvenido a mi sitio web</h1>
+    <h1>Ejemplo de Ocultación de Variables</h1>
     <p>Contenido aquí...</p>
 
     <script>
-        // Evitar acceso a herramientas de desarrollador (DevTools)
+        // Función de autoejecución para ocultar variables
+        (function() {
+            var secretData = 'datos ocultos'; // Variable privada
+            console.log('Intenta inspeccionar esto:', secretData); // Intento de mostrar el dato pero está encapsulado
+        })();
+
+        // Evitar el acceso a DevTools mediante combinaciones de teclas
         window.onkeydown = function(event) {
             if ((event.ctrlKey || event.shiftKey) && event.key === 'I') {
-                event.preventDefault(); // Evita la apertura de las DevTools con Ctrl + I
+                event.preventDefault(); // Evita abrir las DevTools con Ctrl + I
             }
             if ((event.ctrlKey || event.shiftKey) && event.key === 'J') {
-                event.preventDefault(); // Evita la apertura de las DevTools con Ctrl + J
+                event.preventDefault(); // Evita abrir las DevTools con Ctrl + J
             }
             if ((event.ctrlKey || event.shiftKey) && event.key === 'U') {
                 event.preventDefault(); // Evita ver el código fuente con Ctrl + U
             }
         };
 
-        // Evitar que se abra el menú contextual del mouse (click derecho)
+        // Evitar menú contextual (click derecho)
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault(); // Evita el menú contextual
         });
