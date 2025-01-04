@@ -172,12 +172,18 @@
         const data = await response.json();
 
         if (data.status === "success") {
+          // Descargar el archivo de audio en memoria
+          resultDiv.innerHTML = "Descargando audio...";
+          const audioResponse = await fetch(data.audioUrl);
+          const audioBlob = await audioResponse.blob();
+          const audioUrl = URL.createObjectURL(audioBlob);
+
           // Mostrar el reproductor de audio y el título de la canción
           resultDiv.innerHTML = `
             <h2>Resultado:</h2>
             <p><strong>Canción:</strong> ${data.title}</p>
-            <audio controls>
-              <source src="${data.audioUrl}" type="audio/mpeg">
+            <audio controls autoplay>
+              <source src="${audioUrl}" type="audio/mpeg">
               Tu navegador no soporta el elemento de audio.
             </audio>
           `;
