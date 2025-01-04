@@ -144,21 +144,14 @@
 
           for (const src of data.srcLinks) {
             try {
-              // Crear el elemento de audio
-              audioElement = new Audio(src);
-
-              // Esperar a que el audio esté listo para reproducirse
-              await new Promise((resolve, reject) => {
-                audioElement.addEventListener('canplaythrough', resolve); // El audio es válido
-                audioElement.addEventListener('error', reject); // El audio no es válido
-              });
-
-              // Si el audio es válido, mostrarlo en el contenedor
-              audioContainer.innerHTML = `<audio controls src="${src}"></audio>`;
-              validAudioFound = true;
-              break; // Detener el bucle después de encontrar el primer audio válido
+              const isValid = await checkAudioAccessibility(src);
+              if (isValid) {
+                audioContainer.innerHTML = `<audio controls src="${src}"></audio>`;
+                validAudioFound = true;
+                break; // Detener después de encontrar el primer audio válido
+              }
             } catch (error) {
-              console.warn(`El enlace no es válido o no se puede reproducir: ${src}`);
+              console.warn(`No se pudo reproducir: ${src}`, error.message);
             }
           }
 
@@ -172,6 +165,14 @@
         console.error('Error al buscar audios:', error);
         audioContainer.innerHTML = '<p class="message">Hubo un error al buscar audios.</p>';
       }
+    }
+
+    async function checkAudioAccessibility(src) {
+      return new Promise((resolve, reject) => {
+        const audioElement = new Audio(src);
+        audioElement.addEventListener('canplaythrough', () => resolve(true));
+        audioElement.addEventListener('error', () => reject(false));
+      });
     }
   </script>
 </body>
