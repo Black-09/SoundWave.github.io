@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor de Letras de Canciones</title>
+    <title>SoundWave</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -70,6 +70,10 @@
         }
         .audio-container {
             margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
         audio {
             width: 100%;
@@ -99,6 +103,17 @@
         }
         .hidden {
             display: none;
+        }
+        .repeat-button {
+            background-color: transparent;
+            border: none;
+            color: #F56E70;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .repeat-button.active {
+            color: #e65a5a;
         }
 
         /* Media Queries para Responsividad */
@@ -141,7 +156,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Reproductor de Letras de Canciones</h1>
+        <h1>SoundWave</h1>
         <div class="search-box">
             <input type="text" id="searchQuery" placeholder="Ingresa el nombre de la canción">
             <button id="searchButton" onclick="fetchData()">Buscar</button>
@@ -156,6 +171,7 @@
                     <source id="audioSource" src="" type="audio/mpeg">
                     Tu navegador no soporta la reproducción de audio.
                 </audio>
+                <button id="repeatButton" class="repeat-button" onclick="toggleRepeat()">🔁</button>
             </div>
         </div>
     </div>
@@ -163,6 +179,8 @@
     <script>
         const audioPlayer = document.getElementById('audioPlayer');
         const songTitle = document.getElementById('songTitle');
+        const repeatButton = document.getElementById('repeatButton');
+        let isRepeatActive = false; // Estado de repetición
 
         // Configurar la API de Media Session
         if ('mediaSession' in navigator) {
@@ -189,6 +207,20 @@
             });
         }
 
+        // Función para activar/desactivar la repetición
+        function toggleRepeat() {
+            isRepeatActive = !isRepeatActive;
+            repeatButton.classList.toggle('active', isRepeatActive);
+        }
+
+        // Repetir la canción si está activado
+        audioPlayer.addEventListener('ended', () => {
+            if (isRepeatActive) {
+                audioPlayer.currentTime = 0; // Reiniciar la canción
+                audioPlayer.play(); // Reproducir nuevamente
+            }
+        });
+
         async function fetchData() {
             const searchQuery = document.getElementById('searchQuery').value;
             const url = `https://66wd8k-3000.csb.app/scrape?q=${encodeURIComponent(searchQuery)}`;
@@ -199,7 +231,7 @@
             document.getElementById('error').style.display = 'none';
             document.getElementById('audioSource').src = '';
             document.getElementById('audioPlayer').load();
-            songTitle.textContent = '';
+            songTitle.textContent = ''; // Limpiar el título anterior
 
             try {
                 const response = await fetch(url);
@@ -211,9 +243,9 @@
                     audioPlayer.load();
                     audioPlayer.play();
 
-                    // Actualizar los metadatos de la canción
+                    // Mostrar el título de la canción
                     if (data.videoTitle) {
-                        songTitle.textContent = data.videoTitle;
+                        songTitle.textContent = data.videoTitle; // Actualizar el título
                         if ('mediaSession' in navigator) {
                             navigator.mediaSession.metadata.title = data.videoTitle;
                         }
