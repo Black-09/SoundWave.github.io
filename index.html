@@ -11,11 +11,50 @@
             padding: 0;
             background-color: rgb(82, 82, 82);
             color: white;
+            overflow: hidden; /* Evitar el desplazamiento durante la animación */
+        }
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #F56E70;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000; /* Asegurar que esté por encima de todo */
+            opacity: 1;
+            transition: opacity 1s ease-in-out;
+        }
+        .splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none; /* Deshabilitar interacción después de desvanecer */
+        }
+        .splash-screen h1 {
+            font-size: 3em;
+            color: white;
+            animation: fadeIn 2s ease-in-out;
+        }
+        .splash-screen p {
+            font-size: 1.5em;
+            color: white;
+            animation: fadeIn 3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        .container.visible {
+            opacity: 1;
         }
         h1 {
             text-align: center;
@@ -155,7 +194,14 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Pantalla de entrada -->
+    <div class="splash-screen" id="splashScreen">
+        <h1>SoundWave</h1>
+        <p>Tu reproductor de música en línea</p>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container" id="mainContainer">
         <h1>SoundWave</h1>
         <div class="search-box">
             <input type="text" id="searchQuery" placeholder="Ingresa el nombre de la canción">
@@ -177,34 +223,50 @@
     </div>
 
     <script>
+        // Ocultar la pantalla de entrada después de 3 segundos
+        const splashScreen = document.getElementById('splashScreen');
+        const mainContainer = document.getElementById('mainContainer');
+
+        setTimeout(() => {
+            splashScreen.classList.add('hidden'); // Desvanecer la pantalla de entrada
+            mainContainer.classList.add('visible'); // Mostrar el contenido principal
+        }, 3000); // 3 segundos
+
         const audioPlayer = document.getElementById('audioPlayer');
         const songTitle = document.getElementById('songTitle');
         const repeatButton = document.getElementById('repeatButton');
         let isRepeatActive = false; // Estado de repetición
 
         // Configurar la API de Media Session
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: 'Título de la canción',
-                artist: 'Artista desconocido',
-                album: 'Álbum desconocido',
-                artwork: [
-                    { src: 'https://via.placeholder.com/96x96', sizes: '96x96', type: 'image/png' },
-                    { src: 'https://via.placeholder.com/128x128', sizes: '128x128', type: 'image/png' },
-                    { src: 'https://via.placeholder.com/192x192', sizes: '192x192', type: 'image/png' },
-                    { src: 'https://via.placeholder.com/256x256', sizes: '256x256', type: 'image/png' },
-                    { src: 'https://via.placeholder.com/384x384', sizes: '384x384', type: 'image/png' },
-                    { src: 'https://via.placeholder.com/512x512', sizes: '512x512', type: 'image/png' },
-                ]
-            });
+        function setupMediaSession(title) {
+            if ('mediaSession' in navigator) {
+                // Actualizar los metadatos de la canción
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: title || 'Título desconocido',
+                    artist: 'Artista desconocido',
+                    album: 'Álbum desconocido',
+                    artwork: [
+                        { src: 'https://via.placeholder.com/96x96', sizes: '96x96', type: 'image/png' },
+                        { src: 'https://via.placeholder.com/128x128', sizes: '128x128', type: 'image/png' },
+                        { src: 'https://via.placeholder.com/192x192', sizes: '192x192', type: 'image/png' },
+                        { src: 'https://via.placeholder.com/256x256', sizes: '256x256', type: 'image/png' },
+                        { src: 'https://via.placeholder.com/384x384', sizes: '384x384', type: 'image/png' },
+                        { src: 'https://via.placeholder.com/512x512', sizes: '512x512', type: 'image/png' },
+                    ]
+                });
 
-            // Controlar la reproducción desde la pantalla bloqueada
-            navigator.mediaSession.setActionHandler('play', () => {
-                audioPlayer.play();
-            });
-            navigator.mediaSession.setActionHandler('pause', () => {
-                audioPlayer.pause();
-            });
+                // Controlar la reproducción desde la pantalla bloqueada
+                navigator.mediaSession.setActionHandler('play', () => {
+                    audioPlayer.play();
+                });
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    audioPlayer.pause();
+                });
+                navigator.mediaSession.setActionHandler('stop', () => {
+                    audioPlayer.pause();
+                    audioPlayer.currentTime = 0;
+                });
+            }
         }
 
         // Función para activar/desactivar la repetición
@@ -245,10 +307,13 @@
 
                     // Mostrar el título de la canción
                     if (data.videoTitle) {
-                        songTitle.textContent = data.videoTitle; // Actualizar el título
-                        if ('mediaSession' in navigator) {
-                            navigator.mediaSession.metadata.title = data.videoTitle;
-                        }
+                        const formattedTitle = data.videoTitle
+                            .replace(/\+/g, " ") // Reemplazar "+" con espacios
+                            .replace(/\b(letra|lyrics)\b/gi, "") // Eliminar "letra" o "lyrics"
+                            .trim(); // Eliminar espacios adicionales
+
+                        songTitle.textContent = `Título: ${formattedTitle}`; // Actualizar el título
+                        setupMediaSession(formattedTitle); // Configurar la API de Media Session
                     }
                 } else {
                     document.getElementById('error').style.display = 'block';
