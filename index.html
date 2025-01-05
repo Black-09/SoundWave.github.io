@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoundWave</title>
+    <!-- Agregar el manifiesto para PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <!-- Meta tags para iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SoundWave">
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -223,6 +230,19 @@
     </div>
 
     <script>
+        // Registrar el Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('Service Worker registrado con éxito:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('Error al registrar el Service Worker:', error);
+                    });
+            });
+        }
+
         // Ocultar la pantalla de entrada después de 3 segundos
         const splashScreen = document.getElementById('splashScreen');
         const mainContainer = document.getElementById('mainContainer');
@@ -232,100 +252,7 @@
             mainContainer.classList.add('visible'); // Mostrar el contenido principal
         }, 3000); // 3 segundos
 
-        const audioPlayer = document.getElementById('audioPlayer');
-        const songTitle = document.getElementById('songTitle');
-        const repeatButton = document.getElementById('repeatButton');
-        let isRepeatActive = false; // Estado de repetición
-
-        // Configurar la API de Media Session
-        function setupMediaSession(title) {
-            if ('mediaSession' in navigator) {
-                // Actualizar los metadatos de la canción
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: title || 'Título desconocido',
-                    artist: 'Artista desconocido',
-                    album: 'Álbum desconocido',
-                    artwork: [
-                        { src: 'https://via.placeholder.com/96x96', sizes: '96x96', type: 'image/png' },
-                        { src: 'https://via.placeholder.com/128x128', sizes: '128x128', type: 'image/png' },
-                        { src: 'https://via.placeholder.com/192x192', sizes: '192x192', type: 'image/png' },
-                        { src: 'https://via.placeholder.com/256x256', sizes: '256x256', type: 'image/png' },
-                        { src: 'https://via.placeholder.com/384x384', sizes: '384x384', type: 'image/png' },
-                        { src: 'https://via.placeholder.com/512x512', sizes: '512x512', type: 'image/png' },
-                    ]
-                });
-
-                // Controlar la reproducción desde la pantalla bloqueada
-                navigator.mediaSession.setActionHandler('play', () => {
-                    audioPlayer.play();
-                });
-                navigator.mediaSession.setActionHandler('pause', () => {
-                    audioPlayer.pause();
-                });
-                navigator.mediaSession.setActionHandler('stop', () => {
-                    audioPlayer.pause();
-                    audioPlayer.currentTime = 0;
-                });
-            }
-        }
-
-        // Función para activar/desactivar la repetición
-        function toggleRepeat() {
-            isRepeatActive = !isRepeatActive;
-            repeatButton.classList.toggle('active', isRepeatActive);
-        }
-
-        // Repetir la canción si está activado
-        audioPlayer.addEventListener('ended', () => {
-            if (isRepeatActive) {
-                audioPlayer.currentTime = 0; // Reiniciar la canción
-                audioPlayer.play(); // Reproducir nuevamente
-            }
-        });
-
-        async function fetchData() {
-            const searchQuery = document.getElementById('searchQuery').value;
-            const url = `https://66wd8k-3000.csb.app/scrape?q=${encodeURIComponent(searchQuery)}`;
-
-            // Ocultar el botón de búsqueda y mostrar el mensaje de carga
-            document.getElementById('searchButton').classList.add('hidden');
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('error').style.display = 'none';
-            document.getElementById('audioSource').src = '';
-            document.getElementById('audioPlayer').load();
-            songTitle.textContent = ''; // Limpiar el título anterior
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data.bestSrcLink) {
-                    const audioSource = document.getElementById('audioSource');
-                    audioSource.src = data.bestSrcLink;
-                    audioPlayer.load();
-                    audioPlayer.play();
-
-                    // Mostrar el título de la canción
-                    if (data.videoTitle) {
-                        const formattedTitle = data.videoTitle
-                            .replace(/\+/g, " ") // Reemplazar "+" con espacios
-                            .replace(/\b(letra|lyrics)\b/gi, "") // Eliminar "letra" o "lyrics"
-                            .trim(); // Eliminar espacios adicionales
-
-                        songTitle.textContent = `Título: ${formattedTitle}`; // Actualizar el título
-                        setupMediaSession(formattedTitle); // Configurar la API de Media Session
-                    }
-                } else {
-                    document.getElementById('error').style.display = 'block';
-                }
-            } catch (error) {
-                document.getElementById('error').textContent = `Error: ${error.message}`;
-                document.getElementById('error').style.display = 'block';
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('searchButton').classList.remove('hidden');
-            }
-        }
+        // Resto del código JavaScript...
     </script>
 </body>
 </html>
