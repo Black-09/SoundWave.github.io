@@ -4,13 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoundWave</title>
-    <!-- Agregar el manifiesto para PWA -->
-    <link rel="manifest" href="/manifest.json">
-    <!-- Meta tags para iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SoundWave">
-    <link rel="apple-touch-icon" href="/icon-192x192.png">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,50 +11,11 @@
             padding: 0;
             background-color: rgb(82, 82, 82);
             color: white;
-            overflow: hidden; /* Evitar el desplazamiento durante la animación */
-        }
-        .splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #F56E70;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            z-index: 1000; /* Asegurar que esté por encima de todo */
-            opacity: 1;
-            transition: opacity 1s ease-in-out;
-        }
-        .splash-screen.hidden {
-            opacity: 0;
-            pointer-events: none; /* Deshabilitar interacción después de desvanecer */
-        }
-        .splash-screen h1 {
-            font-size: 3em;
-            color: white;
-            animation: fadeIn 2s ease-in-out;
-        }
-        .splash-screen p {
-            font-size: 1.5em;
-            color: white;
-            animation: fadeIn 3s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            opacity: 0;
-            transition: opacity 1s ease-in-out;
-        }
-        .container.visible {
-            opacity: 1;
         }
         h1 {
             text-align: center;
@@ -201,14 +155,7 @@
     </style>
 </head>
 <body>
-    <!-- Pantalla de entrada -->
-    <div class="splash-screen" id="splashScreen">
-        <h1>SoundWave</h1>
-        <p>Tu reproductor de música en línea</p>
-    </div>
-
-    <!-- Contenido principal -->
-    <div class="container" id="mainContainer">
+    <div class="container">
         <h1>SoundWave</h1>
         <div class="search-box">
             <input type="text" id="searchQuery" placeholder="Ingresa el nombre de la canción">
@@ -230,29 +177,67 @@
     </div>
 
     <script>
-        // Registrar el Service Worker para PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then((registration) => {
-                        console.log('Service Worker registrado con éxito:', registration);
-                    })
-                    .catch((error) => {
-                        console.log('Error al registrar el Service Worker:', error);
-                    });
-            });
+        const audioPlayer = document.getElementById('audioPlayer');
+        const songTitle = document.getElementById('songTitle');
+        const repeatButton = document.getElementById('repeatButton');
+        let isRepeatActive = false; // Estado de repetición
+
+        // Función para activar/desactivar la repetición
+        function toggleRepeat() {
+            isRepeatActive = !isRepeatActive;
+            repeatButton.classList.toggle('active', isRepeatActive);
         }
 
-        // Ocultar la pantalla de entrada después de 3 segundos
-        const splashScreen = document.getElementById('splashScreen');
-        const mainContainer = document.getElementById('mainContainer');
+        // Repetir la canción si está activado
+        audioPlayer.addEventListener('ended', () => {
+            if (isRepeatActive) {
+                audioPlayer.currentTime = 0; // Reiniciar la canción
+                audioPlayer.play(); // Reproducir nuevamente
+            }
+        });
 
-        setTimeout(() => {
-            splashScreen.classList.add('hidden'); // Desvanecer la pantalla de entrada
-            mainContainer.classList.add('visible'); // Mostrar el contenido principal
-        }, 3000); // 3 segundos
+        async function fetchData() {
+            const searchQuery = document.getElementById('searchQuery').value;
+            const url = `https://66wd8k-3000.csb.app/scrape?q=${encodeURIComponent(searchQuery)}`;
 
-        // Resto del código JavaScript...
+            // Ocultar el botón de búsqueda y mostrar el mensaje de carga
+            document.getElementById('searchButton').classList.add('hidden');
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('audioSource').src = '';
+            document.getElementById('audioPlayer').load();
+            songTitle.textContent = ''; // Limpiar el título anterior
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.bestSrcLink) {
+                    const audioSource = document.getElementById('audioSource');
+                    audioSource.src = data.bestSrcLink;
+                    audioPlayer.load();
+                    audioPlayer.play();
+
+                    // Mostrar el título de la canción
+                    if (data.videoTitle) {
+                        const formattedTitle = data.videoTitle
+                            .replace(/\+/g, " ") // Reemplazar "+" con espacios
+                            .replace(/\b(letra|lyrics)\b/gi, "") // Eliminar "letra" o "lyrics"
+                            .trim(); // Eliminar espacios adicionales
+
+                        songTitle.textContent = `Título: ${formattedTitle}`; // Actualizar el título
+                    }
+                } else {
+                    document.getElementById('error').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+                document.getElementById('error').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('searchButton').classList.remove('hidden');
+            }
+        }
     </script>
 </body>
 </html>
