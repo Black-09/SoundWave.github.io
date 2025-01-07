@@ -27,15 +27,17 @@
             justify-content: center;
             padding: 20px;
             background-color: #181818; /* Fondo oscuro */
+            flex-wrap: wrap; /* Permite que los elementos se ajusten en pantallas pequeñas */
         }
 
         input[type="text"] {
             padding: 10px;
-            width: 300px;
+            width: 100%; /* Ocupa todo el ancho en móviles */
             font-size: 16px;
             border: none;
             border-radius: 20px;
             margin-right: 10px;
+            margin-bottom: 10px; /* Espacio entre el input y el botón en móviles */
         }
 
         button {
@@ -46,6 +48,7 @@
             background-color: #1DB954; /* Verde Spotify */
             color: #ffffff;
             cursor: pointer;
+            width: 100%; /* Ocupa todo el ancho en móviles */
         }
 
         button:hover {
@@ -104,7 +107,7 @@
             max-height: 150px;
             overflow-y: auto;
             position: absolute;
-            width: 300px;
+            width: 100%; /* Ocupa todo el ancho en móviles */
             border-radius: 10px;
             display: none;
         }
@@ -163,9 +166,10 @@
                 return;
             }
 
-            const proxyUrl = `https://cors-anywhere.herokuapp.com/https://inv.nadeko.net/search?q=${encodeURIComponent(searchTerm)}`;
+            const proxyUrl = `https://corsproxy.io/?https://inv.nadeko.net/search?q=${encodeURIComponent(searchTerm)}`;
 
             try {
+                console.log("Realizando solicitud a:", proxyUrl); // Depuración
                 const response = await fetch(proxyUrl, {
                     headers: {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -173,13 +177,16 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error("Error al obtener los datos");
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
                 }
 
                 const data = await response.text();
+                console.log("Respuesta de la API:", data); // Depuración
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(data, 'text/html');
                 const videoCards = doc.querySelectorAll('[class="video-card-row"]');
+                console.log("Número de resultados:", videoCards.length); // Depuración
+
                 const resultsList = []; // Lista para almacenar los resultados
                 const seenNames = new Set(); // Conjunto para evitar nombres duplicados
 
@@ -244,7 +251,7 @@
                 document.getElementById("suggestions").style.display = 'none';
             } catch (error) {
                 console.error("Error:", error);
-                document.getElementById("results").innerHTML = "Error al cargar los datos.";
+                document.getElementById("results").innerHTML = `Error al cargar los datos: ${error.message}`;
             }
         }
 
@@ -261,7 +268,7 @@
                 return; // Salir si no hay término de búsqueda
             }
 
-            const proxyUrl = `https://cors-anywhere.herokuapp.com/https://inv.nadeko.net/search?q=${encodeURIComponent(searchTerm)}`;
+            const proxyUrl = `https://corsproxy.io/?https://inv.nadeko.net/search?q=${encodeURIComponent(searchTerm)}`;
 
             try {
                 const response = await fetch(proxyUrl, {
