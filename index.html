@@ -188,9 +188,327 @@
                     const songName = card.querySelector('a').textContent.trim();
                     let songLink = card.querySelector('a').href;
 
-                    // Ajustar el enlace si comienza con 'file:///C:/watch?v='
-                    if (songLink.startsWith('file:///C:/watch?v=')) {
-                        const videoId = songLink.replace('file:///C:/watch?v=', '');
+                    // Verificar si el enlace es relativo y convertirlo a absoluto
+                    if (songLink.startsWith('/')) {
+                        songLink = `https://inv.nadeko.net${songLink}`;
+                    }
+
+                    // Ajustar el enlace si es necesario
+                    if (songLink.includes('watch?v=')) {
+                        const videoId = songLink.split('watch?v=')[1];
+                        songLink = `https://inv.nadeko.net/embed/${videoId}`;
+                    }
+
+                    // Evitar duplicados usando un conjunto (Set)
+                    if (!seenNames.has(songName)) {
+                        seenNames.add(songName); // Agregar el nombre al conjunto
+                        resultsList.push({ name: songName, link: songLink }); // Almacenar en la lista
+                    }
+                });
+
+                // Limpiar el contenedor de resultados antes de agregar el nuevo resultado
+                document.getElementById("results").innerHTML = "";
+
+                // Mostrar solo el primer resultado de la lista (índice 0)
+                if (resultsList.length > 0) {
+                    const firstResult = resultsList[0]; // Obtener el primer resultado
+
+                    // Crear el contenedor para la información del resultado
+                    const resultInfo = document.createElement('div');
+                    resultInfo.classList.add('result-info');
+                    resultInfo.innerHTML = `
+                        <strong>${firstResult.name}</strong><br>
+                        <a href="${firstResult.link}" target="_blank">${firstResult.link}</a>
+                    `;
+
+                    // Crear el contenedor para el contenido embebido
+                    const embedContainer = document.createElement('div');
+                    embedContainer.classList.add('embed-container');
+
+                    // Crear el iframe para el contenido embebido
+                    const iframe = document.createElement('iframe');
+                    iframe.src = firstResult.link;
+                    embedContainer.appendChild(iframe);
+
+                    // Agregar la información y el iframe al contenedor de resultados
+                    document.getElementById("results").appendChild(resultInfo);
+                    document.getElementById("results").appendChild(embedContainer);
+                } else {
+                    document.getElementById("results").innerHTML = "No se encontraron resultados.";
+                }
+
+                // Limpiar el campo de entrada después de realizar la búsqueda
+                document.getElementById("searchInput").value = '';
+
+                // Ocultar las sugerencias después de realizar la búsqueda
+                document.getElementById("suggestions").style.display = 'none';
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("results").innerHTML = "Error al cargar los datos.";
+            }
+        }
+
+        // Función para mostrar las sugerencias de búsqueda
+        async function showSuggestions() {
+            const searchTerm = document.getElementById("searchInput").value.trim();
+            const suggestionsContainer = document.getElementById("suggestions");
+
+            // Limpiar el contenedor de sugerencias antes de agregar nuevas
+            suggestionsContainer.innerHTML = '';
+            suggestionsContainer.style.display = 'none'; // Ocultar el contenedor inicialmente
+
+            if (!searchTerm) {
+                return; // Salir si no hay término de búsqueda
+            }
+
+            const proxyUrl = `https://cors-anywhere.herokuapp.com/https://inv.nadeko.net/search?q=${encodeURIComponent(searchTerm)}`;
+
+            try {
+                const response = await fetch(proxyUrl, {
+                    headers: {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Error al obtener las sugerencias");
+                }
+
+                const data = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data, 'text/html');
+                const videoCards = doc.querySelectorAll('[class="video-card-row"]');
+
+                // Limpiar el contenedor de sugerencias antes de agregar nuevas
+                suggestionsContainer.innerHTML = '';
+
+                let count = 0;
+                videoCards.forEach(card => {
+                    if (count >= 5) return; // Limitar a 5 sugerencias
+                    const songName = card.querySelector('a').textContent;
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.classList.add('suggestion-item');
+                    suggestionItem.textContent = songName;
+                    suggestionItem.onclick = () => {
+                        // Actualizar el input con la sugerencia seleccionada
+                        document.getElementById("searchInput").value = songName;
+                        suggestionsContainer.style.display = 'none'; // Ocultar sugerencias al hacer clic
+                    };
+                    suggestionsContainer.appendChild(suggestionItem);
+                    count++;
+                });
+
+                // Mostrar el contenedor de sugerencias solo si hay resultados
+                if (suggestionsContainer.children.length > 0) {
+                    suggestionsContainer.style.display = 'block';
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error al obtener las sugerencias:", error);
+                suggestionsContainer.style.display = 'none'; // Ocultar el contenedor en caso de error
+            }
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Canciones</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Fondo oscuro similar a Spotify */
+            color: #ffffff; /* Texto blanco */
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+            background-color: #1DB954; /* Verde Spotify */
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background-color: #181818; /* Fondo oscuro */
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+            border: none;
+            border-radius: 20px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 20px;
+            background-color: #1DB954; /* Verde Spotify */
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1ed760; /* Verde más claro al pasar el mouse */
+        }
+
+        .results {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .result-info {
+            margin-bottom: 20px;
+        }
+
+        .result-info strong {
+            font-size: 1.2rem;
+            color: #1DB954; /* Verde Spotify */
+        }
+
+        .result-info a {
+            color: #1DB954; /* Verde Spotify */
+            text-decoration: none;
+        }
+
+        .result-info a:hover {
+            text-decoration: underline;
+        }
+
+        .embed-container {
+            position: relative;
+            padding-bottom: 56.25%; /* Relación de aspecto 16:9 */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            background: #000; /* Fondo negro para el contenedor del iframe */
+            border-radius: 10px; /* Bordes redondeados */
+            margin-top: 20px;
+        }
+
+        .embed-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 10px; /* Bordes redondeados */
+        }
+
+        .suggestions {
+            border: 1px solid #333;
+            background-color: #282828;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            position: absolute;
+            width: 300px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 8px;
+            cursor: pointer;
+            color: #ffffff;
+        }
+
+        .suggestion-item:hover {
+            background-color: #333;
+        }
+
+        /* Diseño responsivo */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            input[type="text"] {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .search-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Buscador de Canciones</h1>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Ingresa el nombre de la canción" oninput="showSuggestions()">
+        <button onclick="fetchData()">Buscar</button>
+        <div id="suggestions" class="suggestions"></div>
+    </div>
+    <div class="results" id="results">
+        <!-- Aquí se mostrará el título, la URL y el contenido embebido -->
+    </div>
+
+    <script>
+        // Función para obtener los datos y extraer los elementos deseados
+        async function fetchData(searchTerm = '') {
+            searchTerm = document.getElementById("searchInput").value.trim();
+
+            if (!searchTerm) {
+                document.getElementById("results").innerHTML = "Por favor, ingresa un nombre de canción.";
+                return;
+            }
+
+            const proxyUrl = `https://cors-anywhere.herokuapp.com/https://inv.nadeko.net/search?q=${encodeURIComponent(searchTerm)}`;
+
+            try {
+                const response = await fetch(proxyUrl, {
+                    headers: {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Error al obtener los datos");
+                }
+
+                const data = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data, 'text/html');
+                const videoCards = doc.querySelectorAll('[class="video-card-row"]');
+                const resultsList = []; // Lista para almacenar los resultados
+                const seenNames = new Set(); // Conjunto para evitar nombres duplicados
+
+                // Procesar los resultados y almacenarlos en la lista
+                videoCards.forEach(card => {
+                    const songName = card.querySelector('a').textContent.trim();
+                    let songLink = card.querySelector('a').href;
+
+                    // Verificar si el enlace es relativo y convertirlo a absoluto
+                    if (songLink.startsWith('/')) {
+                        songLink = `https://inv.nadeko.net${songLink}`;
+                    }
+
+                    // Ajustar el enlace si es necesario
+                    if (songLink.includes('watch?v=')) {
+                        const videoId = songLink.split('watch?v=')[1];
                         songLink = `https://inv.nadeko.net/embed/${videoId}`;
                     }
 
