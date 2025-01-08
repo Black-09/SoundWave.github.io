@@ -1,0 +1,151 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #1db954;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#song-name {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    background-color: #282828;
+    color: #ffffff;
+    outline: none;
+}
+
+#song-name::placeholder {
+    color: #b3b3b3;
+}
+
+#suggestions-container {
+    margin-bottom: 20px;
+}
+
+.suggestion {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #282828;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    color: #ffffff;
+    transition: background-color 0.3s;
+}
+
+.suggestion:hover {
+    background-color: #383838;
+}
+
+#search-button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    background-color: #1db954;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#search-button:hover {
+    background-color: #1ed760;
+}
+
+#filtered-content {
+    background-color: #282828;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    color: #ffffff;
+}
+
+#filtered-content a {
+    color: #1db954;
+    text-decoration: none;
+}
+
+#filtered-content a:hover {
+    text-decoration: underline;
+}
+
+#audio-player {
+    width: 100%;
+    margin-top: 20px;
+    background-color: #282828;
+    border-radius: 10px;
+}
+
+#source-links {
+    background-color: #282828;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    color: #ffffff;
+    display: none;
+}
+
+.audio-link {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #383838;
+    border-radius: 10px;
+    margin-top: 5px;
+    color: #ffffff;
+    transition: background-color 0.3s;
+}
+
+.audio-link:hover {
+    background-color: #484848;
+}
+
+.group-separator {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.group-separator button {
+    background-color: #1db954;
+    border: none;
+    border-radius: 25px;
+    color: #ffffff;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.group-separator button:hover {
+    background-color: #1ed760;
+}
+
+.group-info {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #b3b3b3;
+}
+
+@media (min-width: 768px) {
+    #song-name, #search-button {
+        width: 50%;
+        margin-left: 25%;
+    }
+
+    #filtered-content, #source-links {
+        width: 70%;
+        margin-left: 15%;
+    }
+
+   
+}
