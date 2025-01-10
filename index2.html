@@ -1,57 +1,108 @@
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Búsqueda de Canciones</title>
-
-    <link rel="stylesheet" href="styles.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Download Link</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 80%;
+      max-width: 600px;
+      margin: 50px auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .error {
+      color: red;
+      text-align: center;
+    }
+    .result {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="container">
+    <h1>Spotify Download Link Generator</h1>
+    <form id="spotifyForm">
+      <input type="text" id="spotifyUrl" placeholder="Enter Spotify URL" required />
+      <button type="submit">Get Download Link</button>
+    </form>
+    <p id="errorMessage" class="error"></p>
+    <div id="result" class="result"></div>
+  </div>
 
-    <h1>Búsqueda de Canciones</h1>
+  <script>
+    document.getElementById('spotifyForm').addEventListener('submit', async function (event) {
+      event.preventDefault();  // Evitar que el formulario se envíe normalmente
 
-    <input type="text" id="song-name" placeholder="Escribe el nombre del artista o canción" />
+      const spotifyUrl = document.getElementById('spotifyUrl').value;
+      const errorMessage = document.getElementById('errorMessage');
+      const result = document.getElementById('result');
 
-    <div id="suggestions-container"></div>
+      // Limpiar los mensajes previos
+      errorMessage.textContent = '';
+      result.textContent = '';
 
-    <button id="search-button">Buscar</button>
+      if (!spotifyUrl) {
+        errorMessage.textContent = 'Spotify URL is required!';
+        return;
+      }
 
+      try {
+        // Hacer la solicitud POST al backend
+        const response = await fetch('http://localhost:3000/get-download-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spotifyUrl })
+        });
 
+        const data = await response.json();
 
-    <div id="filtered-content"></div>
-
-
-
-    <!-- Eliminar esta parte si ya no la necesitas -->
-
-    <!--<h2>Enlaces de Audio</h2>-->
-
-    <div id="source-links"></div>
-
-
-
-    <!-- Reproductor de audio -->
-
-    <h2>Reproducir Audio</h2>
-
-    <audio id="audio-player" controls>
-
-        Tu navegador no soporta la reproducción de audio.
-
-    </audio>
-
-
-
-    <script src="scripts.js"></script>
-
+        if (response.ok) {
+          // Mostrar el enlace de descarga
+          result.innerHTML = `<p>Download Link: <a href="${data.downloadLink}" target="_blank">${data.downloadLink}</a></p>`;
+        } else {
+          // Mostrar error del servidor
+          errorMessage.textContent = data.error || 'Failed to retrieve download link';
+        }
+      } catch (error) {
+        // Manejo de errores de red
+        errorMessage.textContent = 'An error occurred. Please try again later.';
+      }
+    });
+  </script>
 </body>
-
 </html>
