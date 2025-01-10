@@ -51,6 +51,10 @@
       margin-top: 20px;
       text-align: center;
     }
+    #audioPlayer {
+      width: 100%;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -62,6 +66,10 @@
     </form>
     <p id="errorMessage" class="error"></p>
     <div id="result" class="result"></div>
+    <!-- Elemento de audio que se mostrará para reproducir -->
+    <audio id="audioPlayer" controls style="display:none;">
+      Your browser does not support the audio element.
+    </audio>
   </div>
 
   <script>
@@ -71,10 +79,12 @@
       const spotifyUrl = document.getElementById('spotifyUrl').value;
       const errorMessage = document.getElementById('errorMessage');
       const result = document.getElementById('result');
+      const audioPlayer = document.getElementById('audioPlayer');
 
       // Limpiar los mensajes previos
       errorMessage.textContent = '';
       result.textContent = '';
+      audioPlayer.style.display = 'none';  // Ocultar el reproductor de audio mientras se espera la respuesta
 
       if (!spotifyUrl) {
         errorMessage.textContent = 'Spotify URL is required!';
@@ -94,6 +104,11 @@
         if (response.ok) {
           // Mostrar el enlace de descarga
           result.innerHTML = `<p>Download Link: <a href="${data.downloadLink}" target="_blank">${data.downloadLink}</a></p>`;
+
+          // Configurar el reproductor de audio
+          audioPlayer.src = data.downloadLink;
+          audioPlayer.style.display = 'block';  // Mostrar el reproductor de audio
+          audioPlayer.play();  // Reproducir el audio automáticamente
         } else {
           // Mostrar error del servidor
           errorMessage.textContent = data.error || 'Failed to retrieve download link';
