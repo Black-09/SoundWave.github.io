@@ -8,38 +8,34 @@
 <body>
   <h1>Reproducir Enlace de Música de Spotify</h1> 
   
-  <!-- Enlace de prueba a una canción dentro de un <label> sin hipervínculo -->
   <label for="spotifyUrl">
     Canción de prueba EXCESOS - Fuerza Regida: https://open.spotify.com/track/6UtWwuheJr5LLDeVypPNx7
   </label>
   <br><br>
 
-  <!-- Enlace a una página para escuchar más canciones dentro de un <label> sin hipervínculo -->
   <label for="spotifyUrl">
     Escuchar más canciones en Spotify: https://open.spotify.com/track/6CvTEtGagmzQvkUzzyKR9k
   </label>
   <br><br>
 
-  <!-- Campo de entrada para la URL -->
-  <label for="spotifyUrl">Introduce la URL de Apple Music:</label>
+  <label for="spotifyUrl">Introduce la URL de Spotify:</label>
   <input type="text" id="spotifyUrl" placeholder="Ejemplo: https://open.spotify.com/track/" required>
   <br><br>
 
-  <!-- Botón para obtener el enlace -->
   <button id="playButton">Reproducir Música</button>
 
-  <!-- Mostrar el texto "Esperando..." aquí y luego ocultarlo -->
   <p id="playLink" style="display:block;">Esperando...</p>
 
-  <!-- Reproductor de audio -->
   <audio id="audioPlayer" controls style="display:none;">
     Tu navegador no soporta el reproductor de audio.
   </audio>
 
-  <!-- Enlace al MP3 -->
   <p id="mp3Link" style="display:none;">
     <a href="#" target="_blank" id="downloadLink">Hacer clic para escuchar el MP3</a>
   </p>
+
+  <!-- Mostrar tiempo de espera -->
+  <p id="loadingTime" style="display:none;">Esperando para empezar... <span id="timeTaken">0</span> segundos.</p>
 
   <script>
     document.getElementById('playButton').addEventListener('click', async () => {
@@ -49,6 +45,12 @@
       spotifyUrl = spotifyUrl.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
       try {
+        // Mostrar el tiempo de carga
+        const loadingTimeElement = document.getElementById('loadingTime');
+        const timeTakenElement = document.getElementById('timeTaken');
+        let startTime = Date.now();
+        loadingTimeElement.style.display = 'block';
+
         // Hacer la solicitud POST al servidor Express
         const response = await fetch('https://jsnode-ab0e.onrender.com/get-download-link', {
           method: 'POST',
@@ -74,7 +76,14 @@
         const audioPlayer = document.getElementById('audioPlayer');
         audioPlayer.style.display = 'block';
         audioPlayer.src = playLink;
-        audioPlayer.play();
+
+        // Cuando el audio esté listo para reproducirse
+        audioPlayer.addEventListener('loadeddata', () => {
+          let endTime = Date.now();
+          let timeTaken = (endTime - startTime) / 1000; // tiempo en segundos
+          timeTakenElement.textContent = timeTaken.toFixed(2); // Mostrar tiempo transcurrido
+          audioPlayer.play();
+        });
 
         // Ocultar el enlace al archivo MP3
         document.getElementById('mp3Link').style.display = 'none';
