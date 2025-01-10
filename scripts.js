@@ -103,7 +103,8 @@ function showItems(items, container, isSuggestion = false) {
 
 // Función para buscar sugerencias mientras se escribe
 function fetchSuggestions(songName) {
-    const url = 'https://inv.nadeko.net/search?q=' + encodeURIComponent(songName);
+  //  const url = 'https://inv.nadeko.net/search?q=' + encodeURIComponent(songName);
+    const url = 'https://yewtu.be/search?q=' + encodeURIComponent(songName);
 
     fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url))
         .then(response => {
