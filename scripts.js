@@ -1,125 +1,129 @@
-// Variables globales
-let currentGroupIndex = 0;
-let currentResultIndex = 0;
-const resultsPerGroup = 5; // Ajustar según el número de resultados por grupo
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recomendaciones de Videos</title>
+    <style>
+        /* Agregar algo de estilo básico */
+        body {
+            font-family: Arial, sans-serif;
+        }
 
-// Función principal para procesar los videos y obtener los enlaces
-function processVideos(videoIds) {
-    // Llamamos a la función para obtener los enlaces del primer video
-    fetchSourceCode(videoIds[0], currentGroupIndex, currentResultIndex);
-}
+        .video-container {
+            margin: 20px 0;
+        }
 
-// Función para obtener y verificar los enlaces <source src>
-function fetchSourceCode(videoId, groupIndex = currentGroupIndex, resultIndex = 0) {
-    // Usamos primero la URL predeterminada
-    const watchUrl = `https://yewtu.be/watch?v=${videoId}&listen=1`;
-    const allOriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(watchUrl)}`;
+        .video-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
 
-    // Intentamos obtener los enlaces de audio desde la URL predeterminada
-    fetch(allOriginsUrl)
-        .then(response => {
-            if (response.ok) return response.text();
-            throw new Error('Network response was not ok.');
-        })
-        .then(data => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(data, 'text/html');
-            const sourceElements = doc.querySelectorAll('source[src]');
-            const audioElements = doc.querySelectorAll('audio[src]');
+        .suggestions {
+            list-style-type: none;
+            padding: 0;
+        }
 
-            // Obtener todos los enlaces de audio
-            const sourceLinks = Array.from(sourceElements).map(source => source.src);
-            const audioLinks = Array.from(audioElements).map(audio => audio.src);
-            const allLinks = [...sourceLinks, ...audioLinks];
+        .suggestion-item {
+            padding: 5px 0;
+        }
 
-            // Verificar si hay enlaces válidos, si no, intentamos con la URL alternativa
-            if (allLinks.length > 0) {
-                checkAccessibleLinks(allLinks, videoId, groupIndex, resultIndex);
-            } else {
-                // Si no se encontraron enlaces, intentamos con la URL alternativa
-                const alternativeWatchUrl = `https://inv.nadeko.net/watch?v=${videoId}&listen=1`;
-                const alternativeAllOriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(alternativeWatchUrl)}`;
-                
-                // Intentamos obtener los enlaces de audio desde la URL alternativa
-                fetch(alternativeAllOriginsUrl)
-                    .then(response => {
-                        if (response.ok) return response.text();
-                        throw new Error('Network response was not ok.');
-                    })
-                    .then(data => {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(data, 'text/html');
-                        const sourceElements = doc.querySelectorAll('source[src]');
-                        const audioElements = doc.querySelectorAll('audio[src]');
+        .suggestion-item a {
+            color: #007BFF;
+            text-decoration: none;
+        }
 
-                        // Obtener todos los enlaces de audio
-                        const sourceLinks = Array.from(sourceElements).map(source => source.src);
-                        const audioLinks = Array.from(audioElements).map(audio => audio.src);
-                        const allLinks = [...sourceLinks, ...audioLinks];
+        .suggestion-item a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recomendaciones de Videos</h1>
 
-                        // Verificar la accesibilidad de los enlaces
-                        checkAccessibleLinks(allLinks, videoId, groupIndex, resultIndex);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching alternative source code:', error);
-                        displayErrorMessage();
+    <!-- Contenedor donde se mostrarán los videos -->
+    <div id="video-container" class="video-container">
+        <!-- El título del video y sus sugerencias aparecerán aquí -->
+        <p id="video-title" class="video-title">Cargando video...</p>
+        <ul id="suggestions-list" class="suggestions">
+            <!-- Las sugerencias de enlaces aparecerán aquí -->
+        </ul>
+    </div>
+
+    <script>
+        // Aquí colocas tu código JavaScript que procesará los videos y sugerencias.
+        let currentGroupIndex = 0;
+        let currentResultIndex = 0;
+        const resultsPerGroup = 5; // Ejemplo de cantidad de resultados por grupo
+
+        // Suponiendo que tienes una lista de IDs de videos
+        const videoIdsForGroup = [
+            ['videoID1', 'videoID2', 'videoID3', 'videoID4', 'videoID5'], // Grupo 1
+            ['videoID6', 'videoID7', 'videoID8', 'videoID9', 'videoID10'], // Grupo 2
+        ];
+
+        // Función para obtener los IDs de videos del grupo actual
+        function getVideoIdsForGroup(groupIndex) {
+            return videoIdsForGroup[groupIndex] || [];
+        }
+
+        // Esta función simula la obtención de sugerencias para un video
+        function fetchSourceCode(videoId, groupIndex, resultIndex) {
+            const allOriginsUrl = `https://example.com/video/${videoId}`; // URL ficticia para obtener los enlaces
+
+            fetch(allOriginsUrl)
+                .then(response => response.text())
+                .then(data => {
+                    // Procesar el HTML recibido para encontrar los enlaces
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(data, 'text/html');
+                    const sourceElements = doc.querySelectorAll('source[src]');
+                    const audioElements = doc.querySelectorAll('audio[src]');
+                    const allLinks = [...sourceElements, ...audioElements].map(element => element.src);
+
+                    // Mostrar el título del video y las sugerencias
+                    const videoTitle = `Video ${groupIndex + 1} - ${resultIndex + 1}`;
+                    document.getElementById('video-title').textContent = videoTitle;
+
+                    const suggestionsList = document.getElementById('suggestions-list');
+                    suggestionsList.innerHTML = ''; // Limpiar las sugerencias anteriores
+
+                    allLinks.forEach(link => {
+                        const listItem = document.createElement('li');
+                        listItem.classList.add('suggestion-item');
+                        const anchor = document.createElement('a');
+                        anchor.href = link;
+                        anchor.textContent = link;
+                        listItem.appendChild(anchor);
+                        suggestionsList.appendChild(listItem);
                     });
+
+                    // Llamar a la siguiente sugerencia después de un pequeño retraso
+                    setTimeout(() => findNextVideo(groupIndex, resultIndex), 2000);
+                })
+                .catch(error => {
+                    console.error('Error al obtener los enlaces:', error);
+                });
+        }
+
+        // Función para avanzar al siguiente video y procesar
+        function findNextVideo(groupIndex, resultIndex) {
+            currentResultIndex++;
+            if (currentResultIndex >= resultsPerGroup) {
+                currentResultIndex = 0;
+                currentGroupIndex++;
             }
-        })
-        .catch(error => {
-            console.error('Error fetching source code:', error);
-            displayErrorMessage();
-        });
-}
 
-// Función para verificar la accesibilidad de los enlaces
-function checkAccessibleLinks(links, videoId, groupIndex, resultIndex) {
-    // Verificamos si los enlaces son accesibles (si la respuesta es correcta)
-    links.forEach(link => {
-        fetch(link)
-            .then(response => {
-                if (response.ok) {
-                    console.log(`Enlace válido: ${link}`);
-                    // Aquí se puede hacer algo con el enlace válido, por ejemplo, mostrarlo al usuario
-                } else {
-                    console.log(`Enlace no accesible: ${link}`);
-                }
-            })
-            .catch(error => {
-                console.error('Error al verificar el enlace:', error);
-            });
-    });
+            const videoIds = getVideoIdsForGroup(groupIndex);
+            if (videoIds.length > 0) {
+                fetchSourceCode(videoIds[currentResultIndex], groupIndex, currentResultIndex);
+            } else {
+                console.log('No hay más videos para procesar en este grupo');
+            }
+        }
 
-    // Intentar con el siguiente video si hay más en el grupo
-    findNextVideo(groupIndex, resultIndex);
-}
-
-// Función para encontrar el siguiente video a procesar
-function findNextVideo(groupIndex, resultIndex) {
-    currentResultIndex++;
-    if (currentResultIndex >= resultsPerGroup) {
-        currentResultIndex = 0;
-        currentGroupIndex++;
-    }
-
-    // Aquí podemos cargar más videos si es necesario
-    const videoIds = getVideoIdsForGroup(groupIndex); // Función que obtiene los IDs de videos para el grupo
-    if (videoIds.length > 0) {
-        fetchSourceCode(videoIds[currentResultIndex], groupIndex, currentResultIndex);
-    }
-}
-
-// Función para obtener los IDs de videos para un grupo (puede depender de la lógica que utilices)
-function getVideoIdsForGroup(groupIndex) {
-    // Aquí deberías devolver los IDs de los videos de ese grupo específico
-    // Esta función debe ser implementada según la estructura de tus datos
-    return [];
-}
-
-// Función para mostrar un mensaje de error
-function displayErrorMessage() {
-    const sourceLinksContainer = document.getElementById('sourceLinksContainer');
-    sourceLinksContainer.textContent = 'No se pudo cargar los enlaces de audio desde las URLs proporcionadas.';
-    // Intentar con el siguiente video si hay un error
-    findNextVideo(currentGroupIndex, currentResultIndex);
-}
+        // Inicialización: empezar a cargar el primer grupo de videos
+        findNextVideo(currentGroupIndex, currentResultIndex);
+    </script>
+</body>
+</html>
