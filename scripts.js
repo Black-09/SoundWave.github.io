@@ -165,7 +165,7 @@ async function fetchSearchResults(songName) {
     let allResults = [];
 
     for (let page = 1; page <= maxPages; page++) {
-        const url = `https://inv.nadeko.net/search?q=${encodeURIComponent(songName)}&page=${page}`;
+        const url = `https://yewtu.be/search?q=${encodeURIComponent(songName)}&page=${page}`;
 
         try {
             const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
@@ -267,7 +267,8 @@ function showGroupedResults() {
 
 // Función para obtener y verificar los enlaces <source src>
 function fetchSourceCode(videoId, groupIndex = currentGroupIndex, resultIndex = 0) {
-    const watchUrl = `https://inv.nadeko.net/watch?v=${videoId}&listen=1`;
+   // const watchUrl = `https://inv.nadeko.net/watch?v=${videoId}&listen=1`;
+    const watchUrl = `https://yewtu.be/watch?v=${videoId}&listen=1`;
     const allOriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(watchUrl)}`;
 
     fetch(allOriginsUrl)
