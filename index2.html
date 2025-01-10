@@ -105,8 +105,8 @@
           // Mostrar el enlace de descarga
           result.innerHTML = `<p>Download Link: <a href="${data.downloadLink}" target="_blank">${data.downloadLink}</a></p>`;
 
-          // Configurar el reproductor de audio
-          audioPlayer.src = data.downloadLink;
+          // Configurar el reproductor de audio con el enlace obtenido
+          audioPlayer.src = data.downloadLink;  // Asignar el enlace al reproductor
           audioPlayer.style.display = 'block';  // Mostrar el reproductor de audio
           audioPlayer.play();  // Reproducir el audio automáticamente
         } else {
