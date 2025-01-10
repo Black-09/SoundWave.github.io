@@ -33,6 +33,13 @@
     document.getElementById('playButton').addEventListener('click', async () => {
       let spotifyUrl = document.getElementById('spotifyUrl').value;
 
+      // Validación básica de URL (puedes mejorarla según sea necesario)
+      const spotifyUrlRegex = /^(https:\/\/music\.apple\.com\/)/;
+      if (!spotifyUrl || !spotifyUrlRegex.test(spotifyUrl)) {
+        alert('Por favor, introduce una URL válida de Apple Music.');
+        return;
+      }
+
       // Eliminar las tildes y caracteres especiales en la URL
       spotifyUrl = spotifyUrl.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
