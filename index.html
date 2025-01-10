@@ -1,29 +1,77 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Búsqueda de Canciones</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reproducir Enlace de Música</title>
 </head>
 <body>
-    <h1>Búsqueda de Canciones</h1>
-    <input type="text" id="song-name" placeholder="Escribe el nombre del artista o canción" />
-    <div id="suggestions-container"></div>
-    <button id="search-button">Buscar</button>
+  <h1>Reproducir Enlace de Música de Apple</h1> 
+  
+  <!-- Campo de entrada para la URL -->
+  <label for="spotifyUrl">Introduce la URL de Apple Music:</label>
+  <input type="text" id="spotifyUrl" placeholder="Ejemplo: https://music.apple.com/mx/album/qué-onda/1705125165?i=1705125233" required>
+  <br><br>
 
-    <div id="filtered-content"></div>
+  <!-- Botón para obtener el enlace -->
+  <button id="playButton">Reproducir Música</button>
 
-    <!-- Eliminar esta parte si ya no la necesitas -->
-    <!--<h2>Enlaces de Audio</h2>-->
-    <div id="source-links"></div>
+  <!-- Mostrar el texto "Esperando..." aquí y luego ocultarlo -->
+  <p id="playLink" style="display:block;">Esperando...</p>
 
-    <!-- Reproductor de audio -->
-    <h2>Reproducir Audio</h2>
-    <audio id="audio-player" controls>
-        Tu navegador no soporta la reproducción de audio.
-    </audio>
+  <!-- Reproductor de audio -->
+  <audio id="audioPlayer" controls style="display:none;">
+    Tu navegador no soporta el reproductor de audio.
+  </audio>
 
-    <script src="scripts.js"></script>
+  <!-- Enlace al MP3 -->
+  <p id="mp3Link" style="display:none;">
+    <a href="#" target="_blank" id="downloadLink">Hacer clic para escuchar el MP3</a>
+  </p>
+
+  <script>
+    document.getElementById('playButton').addEventListener('click', async () => {
+      let spotifyUrl = document.getElementById('spotifyUrl').value;
+
+      // Eliminar las tildes y caracteres especiales en la URL
+      spotifyUrl = spotifyUrl.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+      try {
+        // Hacer la solicitud POST al servidor Express
+        const response = await fetch('http://localhost:3000/get-download-link', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ spotifyUrl })
+        });
+
+        // Si la respuesta no es exitosa, lanzamos un error
+        if (!response.ok) {
+          throw new Error('Error al obtener el enlace de reproducción');
+        }
+
+        // Obtener el enlace de reproducción desde la respuesta
+        const data = await response.json();
+        const playLink = data.downloadLink;
+
+        // Ocultar la URL y el texto "Esperando..."
+        document.getElementById('playLink').style.display = 'none';
+
+        // Mostrar el reproductor de audio y asignar el enlace
+        const audioPlayer = document.getElementById('audioPlayer');
+        audioPlayer.style.display = 'block';
+        audioPlayer.src = playLink;
+        audioPlayer.play();
+
+        // Ocultar el enlace al archivo MP3
+        document.getElementById('mp3Link').style.display = 'none';
+
+      } catch (error) {
+        console.error('Error al hacer la solicitud:', error);
+        document.getElementById('playLink').textContent = 'Error al obtener el enlace.';
+      }
+    });
+  </script>
 </body>
 </html>
