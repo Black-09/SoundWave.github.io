@@ -44,14 +44,8 @@
       spotifyUrl = spotifyUrl.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
       try {
-        // Hacer la solicitud POST al servidor Express
-        const response = await fetch('https://jsnode-ab0e.onrender.com/get-download-link', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ spotifyUrl })
-        });
+        // Hacer la solicitud GET al servidor Express con la URL como parámetro
+        const response = await fetch(`https://jsnode-ab0e.onrender.com/get-download-link?spotifyUrl=${encodeURIComponent(spotifyUrl)}`);
 
         // Si la respuesta no es exitosa, lanzamos un error
         if (!response.ok) {
