@@ -103,60 +103,78 @@ function showItems(items, container, isSuggestion = false) {
 
 // Función para buscar sugerencias mientras se escribe
 function fetchSuggestions(songName) {
-  //  const url = 'https://inv.nadeko.net/search?q=' + encodeURIComponent(songName);
-    const url = 'https://yewtu.be/search?q=' + encodeURIComponent(songName);
+  // Alternativa de URLs para obtener sugerencias
+  const url1 = 'https://inv.nadeko.net/search?q=' + encodeURIComponent(songName);
+  const url2 = 'https://yewtu.be/search?q=' + encodeURIComponent(songName);
 
-    fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url))
+  // Intentar con la primera URL
+  fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url1))
+    .then(response => {
+        if (response.ok) return response.text();
+        throw new Error('Network response was not ok.');
+    })
+    .then(data => {
+        processSuggestionsData(data);
+    })
+    .catch(() => {
+        // Si la primera URL falla, intentar con la segunda
+        fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url2))
         .then(response => {
             if (response.ok) return response.text();
             throw new Error('Network response was not ok.');
         })
         .then(data => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(data, 'text/html');
-            const divs = doc.querySelectorAll('div.video-card-row');
-
-            // Filtrar y mostrar sugerencias
-            const newSuggestions = Array.from(divs)
-                .map(div => {
-                    const link = div.querySelector('a');
-                    const titleElement = link ? link.querySelector('p') : null;
-                    const title = titleElement ? titleElement.innerText : 'Sin título';
-                    const videoId = link ? link.getAttribute('href').split('v=')[1] : null;
-                    const lengthElement = div.querySelector('.length'); // Obtener la duración del video
-                    const length = lengthElement ? lengthElement.innerText : 'Desconocida'; // Obtener duración si existe
-                    return { title, videoId, length }; // Agregar duración
-                })
-                .filter(suggestion => {
-                    // Filtrar sugerencias que incluyan el nombre del artista o canción
-                    const searchTerm = originalSearchTerm.toLowerCase();
-                    const songTitle = suggestion.title.toLowerCase();
-
-                    // Verificar si el título incluye el nombre del artista o canción
-                    const includesSearchTerm = (
-                        songTitle.includes(searchTerm) || // Coincidencia parcial
-                        searchTerm.split(' ').every(term => songTitle.includes(term)) // Coincidencia de todas las palabras
-                    );
-
-                    // Excluir canciones que contengan "oficial" o "Official" (opcional)
-                    const excludesOfficial = !songTitle.includes('oficial') && !songTitle.includes('official');
-
-                    return includesSearchTerm && excludesOfficial;
-                });
-
-            // Limitar a 5 sugerencias
-            const limitedSuggestions = newSuggestions.slice(0, 5);
-
-            // Comparar con las sugerencias actuales
-            if (JSON.stringify(limitedSuggestions) !== JSON.stringify(currentSuggestions)) {
-                currentSuggestions = limitedSuggestions;
-                showItems(currentSuggestions, suggestionsContainer, true);
-            }
+            processSuggestionsData(data);
         })
         .catch(error => {
-            console.error('There was a problem with the fetch operation:', error);
+            console.error('Error al obtener sugerencias:', error);
             suggestionsContainer.innerHTML = '<div class="suggestion">Error al cargar las sugerencias.</div>';
         });
+    });
+}
+
+// Función para procesar los datos de las sugerencias
+function processSuggestionsData(data) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data, 'text/html');
+    const divs = doc.querySelectorAll('div.video-card-row');
+
+    // Filtrar y mostrar sugerencias
+    const newSuggestions = Array.from(divs)
+        .map(div => {
+            const link = div.querySelector('a');
+            const titleElement = link ? link.querySelector('p') : null;
+            const title = titleElement ? titleElement.innerText : 'Sin título';
+            const videoId = link ? link.getAttribute('href').split('v=')[1] : null;
+            const lengthElement = div.querySelector('.length'); // Obtener la duración del video
+            const length = lengthElement ? lengthElement.innerText : 'Desconocida'; // Obtener duración si existe
+            return { title, videoId, length }; // Agregar duración
+        })
+        .filter(suggestion => {
+            // Filtrar sugerencias que incluyan el nombre del artista o canción
+            const searchTerm = originalSearchTerm.toLowerCase();
+            const songTitle = suggestion.title.toLowerCase();
+
+            // Verificar si el título incluye el nombre del artista o canción
+            const includesSearchTerm = (
+                songTitle.includes(searchTerm) || // Coincidencia parcial
+                searchTerm.split(' ').every(term => songTitle.includes(term)) // Coincidencia de todas las palabras
+            );
+
+            // Excluir canciones que contengan "oficial" o "Official" (opcional)
+            const excludesOfficial = !songTitle.includes('oficial') && !songTitle.includes('official');
+
+            return includesSearchTerm && excludesOfficial;
+        });
+
+    // Limitar a 5 sugerencias
+    const limitedSuggestions = newSuggestions.slice(0, 5);
+
+    // Comparar con las sugerencias actuales
+    if (JSON.stringify(limitedSuggestions) !== JSON.stringify(currentSuggestions)) {
+        currentSuggestions = limitedSuggestions;
+        showItems(currentSuggestions, suggestionsContainer, true);
+    }
 }
 
 // Función para buscar en múltiples páginas
@@ -267,7 +285,6 @@ function showGroupedResults() {
 
 // Función para obtener y verificar los enlaces <source src>
 function fetchSourceCode(videoId, groupIndex = currentGroupIndex, resultIndex = 0) {
-   // const watchUrl = `https://inv.nadeko.net/watch?v=${videoId}&listen=1`;
     const watchUrl = `https://yewtu.be/watch?v=${videoId}&listen=1`;
     const allOriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(watchUrl)}`;
 
@@ -302,93 +319,4 @@ function fetchSourceCode(videoId, groupIndex = currentGroupIndex, resultIndex = 
 async function checkAccessibleLinks(links, videoId, groupIndex, resultIndex) {
     const accessibleLinks = [];
 
-    // Verificar cada enlace en paralelo
-    const linkChecks = links.map(link =>
-        fetch(link)
-            .then(response => {
-                if (response.ok) {
-                    accessibleLinks.push(link); // Agregar enlace válido a la lista
-                    return true; // Enlace válido
-                } else {
-                    return false; // Enlace no válido
-                }
-            })
-            .catch(() => false) // Enlace no válido si hay un error
-    );
-
-    // Esperar a que todas las verificaciones terminen
-    await Promise.all(linkChecks);
-
-    if (accessibleLinks.length > 0) {
-        // Si hay enlaces válidos, mostrarlos en la lista y reproducir el primero
-        sourceLinksContainer.innerHTML = accessibleLinks
-            .map(link => `<div class="audio-link">${link}</div>`)
-            .join('\n');
-        playAudio(accessibleLinks[0]);
-    } else {
-        // Si no hay enlaces válidos, buscar en el siguiente video
-        findNextVideo(groupIndex, resultIndex);
-    }
-}
-
-// Función para buscar en el siguiente video
-function findNextVideo(groupIndex, resultIndex) {
-    // Verificar si hay más resultados en el grupo actual
-    if (resultIndex < groupedResults[groupIndex].length - 1) {
-        // Buscar en el siguiente resultado del grupo actual
-        const nextResult = groupedResults[groupIndex][resultIndex + 1];
-        selectedVideoId = nextResult.videoId;
-        selectedTitle = nextResult.title;
-        fetchSourceCode(selectedVideoId, groupIndex, resultIndex + 1);
-    } else if (groupIndex < groupedResults.length - 1) {
-        // Buscar en el primer resultado del siguiente grupo
-        const nextGroup = groupedResults[groupIndex + 1];
-        if (nextGroup.length > 0) {
-            const nextResult = nextGroup[0];
-            selectedVideoId = nextResult.videoId;
-            selectedTitle = nextResult.title;
-            fetchSourceCode(selectedVideoId, groupIndex + 1, 0);
-        }
-    } else {
-        // No hay más videos para buscar
-        sourceLinksContainer.textContent = 'No se encontraron enlaces de audio válidos.';
-    }
-}
-
-// Función para reproducir audio automáticamente
-function playAudio(audioUrl) {
-    audioPlayer.src = audioUrl;
-    audioPlayer.play()
-        .then(() => {
-            console.log('Audio reproducido automáticamente.');
-
-            // Ocultar la lista de sugerencias y resultados
-            suggestionsContainer.style.display = 'none'; // Ocultar sugerencias
-            filteredContent.style.display = 'none'; // Ocultar resultados
-        })
-        .catch(error => {
-            console.error('Error al reproducir el audio automáticamente:', error);
-            alert('Haz clic en el botón de reproducción del reproductor de audio.');
-        });
-}
-
-// Funciones auxiliares
-function showSelectedSong() {
-    if (selectedVideoId && selectedTitle) {
-        filteredContent.innerHTML = `<strong>${selectedTitle}</strong>`; // Solo mostrar el título
-    } else {
-        filteredContent.innerHTML = 'No se ha seleccionado ninguna canción.';
-    }
-}
-
-function stopAudioPlayer() {
-    audioPlayer.pause();
-    audioPlayer.currentTime = 0;
-    audioPlayer.src = ''; // Limpiar la fuente de audio
-}
-
-function clearSourceLinks() {
-    sourceLinksContainer.innerHTML = '';
-} /*la sugerencias esra muy estricta casi no salen canciónes
-
-Colocar esta url como alternativa si no encuentra la canción con la que esta por defecto const url = 'https://inv.nadeko.net/search?q=' + encodeURIComponent(songName);*/
+    // Verificar
