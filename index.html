@@ -120,8 +120,9 @@
       };
 
       // Cambiar el tiempo de la canción cuando el slider se mueve
-      timeSlider.addEventListener('input', () => {
-        const newTime = (timeSlider.value / 100) * audioPlayer.duration;
+      timeSlider.addEventListener('input', (event) => {
+        // Sólo cambiar el time sin afectar la reproducción
+        const newTime = (event.target.value / 100) * audioPlayer.duration;
         audioPlayer.currentTime = newTime;
       });
     }
