@@ -27,12 +27,18 @@
     Tu navegador no soporta el reproductor de audio.
   </audio>
 
+  <!-- Barra deslizante para mover el tiempo -->
+  <div id="timeControl" style="display:none;">
+    <label for="timeSlider">Mover el tiempo:</label>
+    <input type="range" id="timeSlider" value="0" step="1" min="0" max="100" style="width: 100%;">
+    <span id="currentTimeDisplay">0:00</span>
+  </div>
+
   <!-- Enlace al MP3 -->
   <p id="mp3Link" style="display:none;">
     <a href="#" target="_blank" id="downloadLink">Hacer clic para escuchar el MP3</a>
   </p>
 
-  <!-- Página para buscar canciones -->
   <h2>Búsqueda de canciones en Spotify</h2>
   <a href="https://kworb.net/spotify/artists.html" target="_blank">Buscar canciones y artistas</a>
 
@@ -53,16 +59,15 @@
           body: JSON.stringify({ spotifyUrl })
         });
 
-        // Si la respuesta no es exitosa, lanzamos un error
         if (!response.ok) {
           throw new Error('Error al obtener el enlace de reproducción');
         }
 
         // Obtener el enlace de reproducción desde la respuesta
         const data = await response.json();
-        const playLink = data.downloadLink;
+        const playLink = data.downloadLink; // Se espera que este sea un enlace directo a un archivo de audio
 
-        // Ocultar la URL y el texto "Esperando..."
+        // Ocultar el texto "Esperando..."
         document.getElementById('playLink').style.display = 'none';
 
         // Mostrar el reproductor de audio y asignar el enlace
@@ -75,9 +80,12 @@
         document.getElementById('songTime').style.display = 'block';
         document.getElementById('timeDuration').textContent = duration;
 
+        // Mostrar el control del tiempo
+        document.getElementById('timeControl').style.display = 'block';
+
         audioPlayer.play();
 
-        // Ocultar el enlace al archivo MP3
+        // Ocultar el enlace al archivo MP3 si lo hay
         document.getElementById('mp3Link').style.display = 'none';
 
       } catch (error) {
@@ -91,7 +99,8 @@
       const audio = new Audio(url);
       return new Promise((resolve, reject) => {
         audio.onloadedmetadata = () => {
-          resolve(audio.duration.toFixed(2)); // Duración en segundos
+          // Convertir la duración a segundos enteros
+          resolve(Math.floor(audio.duration)); // Duración en segundos enteros
         };
         audio.onerror = reject;
       });
@@ -99,12 +108,29 @@
 
     // Función para mostrar el tiempo de reproducción cuando la canción comienza
     function trackStart() {
-      const startTime = Date.now();
       const audioPlayer = document.getElementById('audioPlayer');
-      audioPlayer.onplaying = () => {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2); // Convertir a segundos
-        console.log(`La canción comenzó a sonar en ${elapsed} segundos.`);
+      const timeSlider = document.getElementById('timeSlider');
+      const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+
+      // Actualizar el slider y el tiempo actual mientras la canción suene
+      audioPlayer.ontimeupdate = () => {
+        const currentTime = audioPlayer.currentTime;
+        timeSlider.value = (currentTime / audioPlayer.duration) * 100;
+        currentTimeDisplay.textContent = formatTime(Math.floor(currentTime)); // Mostrar sin milisegundos
       };
+
+      // Cambiar el tiempo de la canción cuando el slider se mueve
+      timeSlider.addEventListener('input', () => {
+        const newTime = (timeSlider.value / 100) * audioPlayer.duration;
+        audioPlayer.currentTime = newTime;
+      });
+    }
+
+    // Función para formatear el tiempo en minutos y segundos sin milisegundos
+    function formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
     }
   </script>
 </body>
