@@ -19,6 +19,9 @@
   <!-- Mostrar el texto "Esperando..." aquí y luego ocultarlo -->
   <p id="playLink" style="display:block;">Esperando...</p>
 
+  <!-- Mostrar el enlace recibido del backend -->
+  <p id="receivedLink" style="display:none;">Enlace recibido del servidor: <span id="linkText"></span></p>
+
   <!-- Mostrar el tiempo que tarda en comenzar a sonar la canción -->
   <p id="songTime" style="display:none;">Tiempo de espera: <span id="timeDuration"></span> segundos</p>
 
@@ -66,6 +69,11 @@
         // Obtener el enlace de reproducción desde la respuesta
         const data = await response.json();
         const playLink = data.downloadLink;
+
+        // Mostrar el enlace recibido en el frontend
+        const linkText = document.getElementById('linkText');
+        linkText.textContent = playLink;
+        document.getElementById('receivedLink').style.display = 'block';
 
         console.log("Enlace de reproducción recibido:", playLink); // Depuración: imprimir el enlace recibido
 
