@@ -50,7 +50,7 @@
       spotifyUrl = spotifyUrl.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
       try {
-        // Hacer la solicitud POST al servidor Express
+        // Hacer la solicitud POST al servidor Express para obtener el enlace de descarga del audio
         const response = await fetch('https://jsnode-ab0e.onrender.com/get-download-link', {
           method: 'POST',
           headers: {
@@ -65,7 +65,7 @@
 
         // Obtener el enlace de reproducción desde la respuesta
         const data = await response.json();
-        const playLink = data.downloadLink; // Se espera que este sea un enlace directo a un archivo de audio
+        const playLink = data.downloadLink;
 
         if (!playLink) {
           throw new Error('El enlace de reproducción no es válido');
@@ -74,13 +74,18 @@
         // Ocultar el texto "Esperando..."
         document.getElementById('playLink').style.display = 'none';
 
-        // Mostrar el reproductor de audio y asignar el enlace
+        // Descargar el archivo de audio
+        const audioResponse = await fetch(playLink);
+        const audioBlob = await audioResponse.blob();
+        const audioURL = URL.createObjectURL(audioBlob);
+
+        // Mostrar el reproductor de audio y asignar la URL del objeto
         const audioPlayer = document.getElementById('audioPlayer');
         audioPlayer.style.display = 'block';
-        audioPlayer.src = playLink;
+        audioPlayer.src = audioURL;
 
         // Mostrar el tiempo de espera
-        const duration = await getAudioDuration(playLink);
+        const duration = await getAudioDuration(audioURL);
         document.getElementById('songTime').style.display = 'block';
         document.getElementById('timeDuration').textContent = duration;
 
@@ -103,7 +108,6 @@
       const audio = new Audio(url);
       return new Promise((resolve, reject) => {
         audio.onloadedmetadata = () => {
-          // Convertir la duración a segundos enteros
           resolve(Math.floor(audio.duration)); // Duración en segundos enteros
         };
         audio.onerror = reject;
@@ -115,11 +119,6 @@
       const audioPlayer = document.getElementById('audioPlayer');
       const timeSlider = document.getElementById('timeSlider');
       const currentTimeDisplay = document.getElementById('currentTimeDisplay');
-
-      // Verificar si el audio está listo para la reproducción
-      audioPlayer.oncanplaythrough = () => {
-        console.log('El audio está listo para reproducirse');
-      };
 
       // Actualizar el slider y el tiempo actual mientras la canción suene
       audioPlayer.ontimeupdate = () => {
