@@ -6,11 +6,11 @@
   <title>Reproducir Enlace de Música</title>
 </head>
 <body>
-  <h1>Reproducir Enlace de Música de Apple</h1> 
+  <h1>Reproducir Enlace de Música de Spotify</h1> 
   
   <!-- Campo de entrada para la URL -->
-  <label for="spotifyUrl">Introduce la URL de Apple Music:</label>
-  <input type="text" id="spotifyUrl" placeholder="Ejemplo: https://music.apple.com/mx/album/qué-onda/1705125165?i=1705125233" required>
+  <label for="spotifyUrl">Introduce la URL de Spotify:</label>
+  <input type="text" id="spotifyUrl" placeholder="Ejemplo: https://open.spotify.com/track/xxxxxx" required>
   <br><br>
 
   <!-- Botón para obtener el enlace -->
@@ -19,8 +19,11 @@
   <!-- Mostrar el texto "Esperando..." aquí y luego ocultarlo -->
   <p id="playLink" style="display:block;">Esperando...</p>
 
+  <!-- Mostrar el tiempo que tarda en comenzar a sonar la canción -->
+  <p id="songTime" style="display:none;">Tiempo de espera: <span id="timeDuration"></span> segundos</p>
+
   <!-- Reproductor de audio -->
-  <audio id="audioPlayer" controls style="display:none;">
+  <audio id="audioPlayer" controls style="display:none;" onplay="trackStart()">
     Tu navegador no soporta el reproductor de audio.
   </audio>
 
@@ -28,6 +31,10 @@
   <p id="mp3Link" style="display:none;">
     <a href="#" target="_blank" id="downloadLink">Hacer clic para escuchar el MP3</a>
   </p>
+
+  <!-- Página para buscar canciones -->
+  <h2>Búsqueda de canciones en Spotify</h2>
+  <a href="https://kworb.net/spotify/artists.html" target="_blank">Buscar canciones y artistas</a>
 
   <script>
     document.getElementById('playButton').addEventListener('click', async () => {
@@ -62,6 +69,12 @@
         const audioPlayer = document.getElementById('audioPlayer');
         audioPlayer.style.display = 'block';
         audioPlayer.src = playLink;
+
+        // Mostrar el tiempo de espera
+        const duration = await getAudioDuration(playLink);
+        document.getElementById('songTime').style.display = 'block';
+        document.getElementById('timeDuration').textContent = duration;
+
         audioPlayer.play();
 
         // Ocultar el enlace al archivo MP3
@@ -72,6 +85,27 @@
         document.getElementById('playLink').textContent = 'Error al obtener el enlace.';
       }
     });
+
+    // Función para obtener la duración de la canción (en segundos)
+    async function getAudioDuration(url) {
+      const audio = new Audio(url);
+      return new Promise((resolve, reject) => {
+        audio.onloadedmetadata = () => {
+          resolve(audio.duration.toFixed(2)); // Duración en segundos
+        };
+        audio.onerror = reject;
+      });
+    }
+
+    // Función para mostrar el tiempo de reproducción cuando la canción comienza
+    function trackStart() {
+      const startTime = Date.now();
+      const audioPlayer = document.getElementById('audioPlayer');
+      audioPlayer.onplaying = () => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2); // Convertir a segundos
+        console.log(`La canción comenzó a sonar en ${elapsed} segundos.`);
+      };
+    }
   </script>
 </body>
 </html>
