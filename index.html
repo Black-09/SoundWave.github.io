@@ -67,6 +67,10 @@
         const data = await response.json();
         const playLink = data.downloadLink; // Se espera que este sea un enlace directo a un archivo de audio
 
+        if (!playLink) {
+          throw new Error('El enlace de reproducción no es válido');
+        }
+
         // Ocultar el texto "Esperando..."
         document.getElementById('playLink').style.display = 'none';
 
@@ -112,6 +116,11 @@
       const timeSlider = document.getElementById('timeSlider');
       const currentTimeDisplay = document.getElementById('currentTimeDisplay');
 
+      // Verificar si el audio está listo para la reproducción
+      audioPlayer.oncanplaythrough = () => {
+        console.log('El audio está listo para reproducirse');
+      };
+
       // Actualizar el slider y el tiempo actual mientras la canción suene
       audioPlayer.ontimeupdate = () => {
         const currentTime = audioPlayer.currentTime;
@@ -121,7 +130,6 @@
 
       // Cambiar el tiempo de la canción cuando el slider se mueve
       timeSlider.addEventListener('input', (event) => {
-        // Sólo cambiar el time sin afectar la reproducción
         const newTime = (event.target.value / 100) * audioPlayer.duration;
         audioPlayer.currentTime = newTime;
       });
