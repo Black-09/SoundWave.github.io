@@ -37,11 +37,6 @@
     <span id="currentTimeDisplay">0:00</span>
   </div>
 
-  <!-- Enlace al MP3 -->
-  <p id="mp3Link" style="display:none;">
-    <a href="#" target="_blank" id="downloadLink">Hacer clic para escuchar el MP3</a>
-  </p>
-
   <h2>Búsqueda de canciones en Spotify</h2>
   <a href="https://kworb.net/spotify/artists.html" target="_blank">Buscar canciones y artistas</a>
 
@@ -84,25 +79,13 @@
         // Ocultar el texto "Esperando..."
         document.getElementById('playLink').style.display = 'none';
 
-        // Descargar el archivo de audio
-        const audioResponse = await fetch(playLink);
-
-        if (!audioResponse.ok) {
-          throw new Error('No se pudo descargar el archivo de audio');
-        }
-
-        const audioBlob = await audioResponse.blob();
-        const audioURL = URL.createObjectURL(audioBlob);
-
-        console.log("URL del audio creada:", audioURL); // Depuración: imprimir la URL del objeto
-
         // Mostrar el reproductor de audio y asignar la URL del objeto
         const audioPlayer = document.getElementById('audioPlayer');
         audioPlayer.style.display = 'block';
-        audioPlayer.src = audioURL;
+        audioPlayer.src = playLink;
 
         // Mostrar el tiempo de espera
-        const duration = await getAudioDuration(audioURL);
+        const duration = await getAudioDuration(playLink);
         document.getElementById('songTime').style.display = 'block';
         document.getElementById('timeDuration').textContent = duration;
 
@@ -110,9 +93,6 @@
         document.getElementById('timeControl').style.display = 'block';
 
         audioPlayer.play();
-
-        // Ocultar el enlace al archivo MP3 si lo hay
-        document.getElementById('mp3Link').style.display = 'none';
 
       } catch (error) {
         console.error('Error al hacer la solicitud:', error);
