@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #player-container {
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+            cursor: pointer;
+            color: #1db954;
+        }
+
+        li:hover {
+            text-decoration: underline;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 10px;
+            width: 70%;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #1db954;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #14833b;
+        }
+
+        /* Media Queries para ajustar el iframe en dispositivos móviles */
+        @media (max-width: 600px) {
+            iframe {
+                width: 100%;
+                height: 80px; /* Reducir la altura del reproductor */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Spotify Player</h1>
+    <div class="search-bar">
+        <input type="text" id="search-query" placeholder="Busca por canción, artista o álbum" />
+        <button onclick="searchSongs()">Buscar</button>
+    </div>
+
+    <p>Resultados de la búsqueda:</p>
+    <ul id="song-list"></ul>
+
+    <div id="player-container">
+        <iframe
+            id="player"
+            style="border-radius:12px;"
+            width="100%"
+            height="152"
+            frameBorder="0"
+            allowfullscreen=""
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            src="">
+        </iframe>
+    </div>
+
+    <script>
+        let accessToken = '';
+
+        // Obtener el token al cargar la página
+        async function getAccessToken() {
+            const response = await fetch('http://localhost:3000/get-token', { method: 'POST' });
+            const data = await response.json();
+            accessToken = data.access_token;
+        }
+
+        // Buscar canciones
+        async function searchSongs() {
+            const query = document.getElementById('search-query').value.trim();
+            if (!query) {
+                alert('Por favor, ingresa un término de búsqueda.');
+                return;
+            }
+
+            const response = await fetch(`http://localhost:3000/search?query=${encodeURIComponent(query)}&type=track&accessToken=${accessToken}`);
+            const data = await response.json();
+
+            const songList = document.getElementById('song-list');
+            songList.innerHTML = ''; // Limpiar resultados anteriores
+
+            data.tracks.items.forEach(track => {
+                const li = document.createElement('li');
+                li.textContent = `${track.name} - ${track.artists.map(artist => artist.name).join(', ')}`;
+                li.dataset.embedUrl = `https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`; // URL para el iframe
+                li.addEventListener('click', () => playTrack(li.dataset.embedUrl));
+                songList.appendChild(li);
+            });
+        }
+
+        // Cambiar la canción en el iframe
+        function playTrack(embedUrl) {
+            const player = document.getElementById('player');
+            player.src = embedUrl; // Actualiza el atributo src del iframe con el nuevo URL
+        }
+
+        // Inicializar el token al cargar la página
+        window.onload = getAccessToken;
+    </script>
+</body>
+</html>
