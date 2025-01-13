@@ -1,142 +1,138 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reproducir Enlace de Música</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024, initial-scale=1.0, user-scalable=no">
+    <title>Spotify Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            width: 1024px; /* Forzar un ancho de 1024px como si fuera una pantalla de escritorio */
+            margin: 0 auto;
+            overflow-x: hidden; /* Evitar desplazamiento horizontal */
+        }
+
+        #player-container {
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+            cursor: pointer;
+            color: #1db954;
+        }
+
+        li:hover {
+            text-decoration: underline;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 10px;
+            width: 70%;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #1db954;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #14833b;
+        }
+
+        /* Media Queries para ajustar el iframe en dispositivos móviles */
+        @media (max-width: 1024px) {
+            body {
+                width: 1024px; /* Asegura que la página no se redimensione en pantallas pequeñas */
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>Reproducir Enlace de Música de Spotify</h1> 
-  
-  <!-- Campo de entrada para la URL -->
-  <label for="spotifyUrl">Introduce la URL de Spotify:</label>
-  <input type="text" id="spotifyUrl" placeholder="Ejemplo: https://open.spotify.com/track/xxxxxx" required>
-  <br><br>
+    <h1>Spotify Player</h1>
+    <div class="search-bar">
+        <input type="text" id="search-query" placeholder="Busca por canción, artista o álbum" />
+        <button onclick="searchSongs()">Buscar</button>
+    </div>
 
-  <!-- Botón para obtener el enlace -->
-  <button id="playButton">Reproducir Música</button>
+    <p>Resultados de la búsqueda:</p>
+    <ul id="song-list"></ul>
 
-  <!-- Mostrar el texto "Esperando..." aquí y luego ocultarlo -->
-  <p id="playLink" style="display:block;">Esperando...</p>
+    <div id="player-container">
+        <iframe
+            id="player"
+            style="border-radius:12px;"
+            width="100%"
+            height="152"
+            frameBorder="0"
+            allowfullscreen=""
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            src="">
+        </iframe>
+    </div>
 
-  <!-- Mostrar el enlace recibido del backend -->
-  <p id="receivedLink" style="display:none;">Enlace recibido del servidor: <span id="linkText"></span></p>
+    <script>
+        let accessToken = '';
 
-  <!-- Mostrar el tiempo que tarda en comenzar a sonar la canción -->
-  <p id="songTime" style="display:none;">Tiempo de espera: <span id="timeDuration"></span> segundos</p>
-
-  <!-- Reproductor de audio -->
-  <audio id="audioPlayer" controls style="display:none;" onplay="trackStart()">
-    Tu navegador no soporta el reproductor de audio.
-  </audio>
-
-  <!-- Barra deslizante para mover el tiempo -->
-  <div id="timeControl" style="display:none;">
-    <label for="timeSlider">Mover el tiempo:</label>
-    <input type="range" id="timeSlider" value="0" step="1" min="0" max="100" style="width: 100%;">
-    <span id="currentTimeDisplay">0:00</span>
-  </div>
-
-  <h2>Búsqueda de canciones en Spotify</h2>
-  <a href="https://kworb.net/spotify/artists.html" target="_blank">Buscar canciones y artistas</a>
-
-  <script>
-    document.getElementById('playButton').addEventListener('click', async () => {
-      let spotifyUrl = document.getElementById('spotifyUrl').value;
-
-      // Eliminar las tildes y caracteres especiales en la URL
-      spotifyUrl = spotifyUrl.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-      try {
-        // Hacer la solicitud POST al servidor Express para obtener el enlace de descarga del audio
-        const response = await fetch('https://jsnode-ab0e.onrender.com/get-download-link', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ spotifyUrl })
-        });
-
-        if (!response.ok) {
-          throw new Error('Error al obtener el enlace de reproducción');
+        // Obtener el token al cargar la página
+        async function getAccessToken() {
+            const response = await fetch('https://jsnode-ab0e.onrender.com', { method: 'POST' });
+            const data = await response.json();
+            accessToken = data.access_token;
         }
 
-        // Obtener el enlace de reproducción desde la respuesta
-        const data = await response.json();
-        const playLink = data.downloadLink;
+        // Buscar canciones
+        async function searchSongs() {
+            const query = document.getElementById('search-query').value.trim();
+            if (!query) {
+                alert('Por favor, ingresa un término de búsqueda.');
+                return;
+            }
 
-        // Mostrar el enlace recibido en el frontend
-        const linkText = document.getElementById('linkText');
-        linkText.textContent = playLink;
-        document.getElementById('receivedLink').style.display = 'block';
+            const response = await fetch(`https://jsnode-ab0e.onrender.com/search?query=${encodeURIComponent(query)}&type=track&accessToken=${accessToken}`);
+            const data = await response.json();
 
-        console.log("Enlace de reproducción recibido:", playLink); // Depuración: imprimir el enlace recibido
+            const songList = document.getElementById('song-list');
+            songList.innerHTML = ''; // Limpiar resultados anteriores
 
-        if (!playLink) {
-          throw new Error('El enlace de reproducción no es válido');
+            data.tracks.items.forEach(track => {
+                const li = document.createElement('li');
+                li.textContent = `${track.name} - ${track.artists.map(artist => artist.name).join(', ')}`;
+                li.dataset.embedUrl = `https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`; // URL para el iframe
+                li.addEventListener('click', () => playTrack(li.dataset.embedUrl));
+                songList.appendChild(li);
+            });
         }
 
-        // Ocultar el texto "Esperando..."
-        document.getElementById('playLink').style.display = 'none';
+        // Cambiar la canción en el iframe
+        function playTrack(embedUrl) {
+            const player = document.getElementById('player');
+            player.src = embedUrl; // Actualiza el atributo src del iframe con el nuevo URL
+        }
 
-        // Mostrar el reproductor de audio y asignar la URL del objeto
-        const audioPlayer = document.getElementById('audioPlayer');
-        audioPlayer.style.display = 'block';
-        audioPlayer.src = playLink;
-
-        // Mostrar el tiempo de espera
-        const duration = await getAudioDuration(playLink);
-        document.getElementById('songTime').style.display = 'block';
-        document.getElementById('timeDuration').textContent = duration;
-
-        // Mostrar el control del tiempo
-        document.getElementById('timeControl').style.display = 'block';
-
-        audioPlayer.play();
-
-      } catch (error) {
-        console.error('Error al hacer la solicitud:', error);
-        document.getElementById('playLink').textContent = 'Error al obtener el enlace.';
-      }
-    });
-
-    // Función para obtener la duración de la canción (en segundos)
-    async function getAudioDuration(url) {
-      const audio = new Audio(url);
-      return new Promise((resolve, reject) => {
-        audio.onloadedmetadata = () => {
-          resolve(Math.floor(audio.duration)); // Duración en segundos enteros
-        };
-        audio.onerror = reject;
-      });
-    }
-
-    // Función para mostrar el tiempo de reproducción cuando la canción comienza
-    function trackStart() {
-      const audioPlayer = document.getElementById('audioPlayer');
-      const timeSlider = document.getElementById('timeSlider');
-      const currentTimeDisplay = document.getElementById('currentTimeDisplay');
-
-      // Actualizar el slider y el tiempo actual mientras la canción suene
-      audioPlayer.ontimeupdate = () => {
-        const currentTime = audioPlayer.currentTime;
-        timeSlider.value = (currentTime / audioPlayer.duration) * 100;
-        currentTimeDisplay.textContent = formatTime(Math.floor(currentTime)); // Mostrar sin milisegundos
-      };
-
-      // Cambiar el tiempo de la canción cuando el slider se mueve
-      timeSlider.addEventListener('input', (event) => {
-        const newTime = (event.target.value / 100) * audioPlayer.duration;
-        audioPlayer.currentTime = newTime;
-      });
-    }
-
-    // Función para formatear el tiempo en minutos y segundos sin milisegundos
-    function formatTime(seconds) {
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = Math.floor(seconds % 60);
-      return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-    }
-  </script>
+        // Inicializar el token al cargar la página
+        window.onload = getAccessToken;
+    </script>
 </body>
 </html>
